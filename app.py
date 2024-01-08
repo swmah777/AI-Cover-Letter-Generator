@@ -20,7 +20,7 @@ api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 
 
 # Define the GitHub repository link
-github_repo_url = 'https://github.com/hheydaroff/dostgpt'
+github_repo_url = 'https://github.com/hheydaroff/AI-Cover-Letter-Generator'
 
 # Add the GitHub button to the sidebar by calling the utility function
 add_github_link(st, github_repo_url)
