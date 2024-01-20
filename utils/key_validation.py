@@ -8,7 +8,8 @@ def is_valid_key(api_key):
         # Make a simple call to test the key, for example, list the engines
         # TODO: The resource 'Engine' has been deprecated
         # Replace the deprecated call with a valid one, for example:
-        client.completions.create(model="gpt-3.5-turbo", prompt="Hello")
+        client.chat.completions.create(model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Hello"}])
 
         # If the above call succeeds, the key is valid
         return True, "API key is valid."
