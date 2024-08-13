@@ -8,10 +8,10 @@ from utils.key_validation import is_valid_key
 import os
 import re
 import magic
-#from PyPDF2 import PdfReader
-#import docx2txt
-#import pytesseractß
-#from PIL import Image
+from PyPDF2 import PdfReader
+import docx2txt
+import pytesseract
+from PIL import Image
 import json
 from groq import Groq
 # make sure you have .env file saved locally with your API keys
