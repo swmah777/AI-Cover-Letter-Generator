@@ -16,65 +16,89 @@ import json
 from groq import Groq
 # make sure you have .env file saved locally with your API keys
 from dotenv import load_dotenv
+import pandas as pd
+import sqlite3
+from jobspy import scrape_jobs
 
-load_dotenv()
+# Setting up the SQLite database
+#conn = sqlite3.connect('app_data.db')
+#c = conn.cursor()
 
-# Sidebar
+# Creating tables for jobs and comments if they don't exist
+#c.execute('''CREATE TABLE IF NOT EXISTS job_searches
+#             (id INTEGER PRIMARY KEY, search_term TEXT, job_title TEXT, job_description TEXT, job_link TEXT)''')
+#c.execute('''CREATE TABLE IF NOT EXISTS comments
+#             (id INTEGER PRIMARY KEY, comment TEXT)''')
+#conn.commit()
 
-# Assuming you have a path to your logo image
-logo_path = 'img/logo_ai_coverletter.png'
+# Custom CSS to increase the width of the main content area
+st.markdown(
+    """
+    <style>
+    .main {
+        max-width: 90%;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-st.sidebar.title('AI Cover Letter Generator')
-# Display the logo at the top of the sidebar
-st.sidebar.image(logo_path, use_column_width=True)  # Adjusts the image to the column width
+# Introduction
+st.title("Job Search App")
+st.write("Welcome to the Job Search App. Input a search term to find jobs that are less than 72 hours old.")
 
-# Input for the OpenAI API key - Now in the sidebar
-#api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
+# Sidebar for comments
+st.sidebar.header("Comments")
+user_comment = st.sidebar.text_area("Enter your comments here:")
 
-# CV Upload and Processing
-cv_file = st.file_uploader("Upload your CV", type=['pdf', 'docx', 'txt'])
-cv_text = ""
-if cv_file is not None:
-    try:
-        cv_text = extract_text_from_cv(cv_file)
-        # Use an expander to allow users to toggle the display of the CV text
-        with st.expander("Preview CV Text", expanded=True):
-            # Create a scrollable container with a fixed height
-            st.text_area('', cv_text, height=300)  # You can adjust the height as needed
-    except Exception as e:
-        st.error(f"An error occurred when processing the CV: {e}")
+#if user_comment:
+#    c.execute("INSERT INTO comments (comment) VALUES (?)", (user_comment,))
+#    conn.commit()
+#    st.sidebar.write("Comment submitted!")
 
+# Input field for job search
+search_term = st.text_input("Enter your desired search term:")
 
-# Job Description
+if st.button("Search"):
+    if search_term:
+        # Call the find_jobs function
+        df = scrape_jobs(
+            site_name=["indeed"],
+            search_term=search_term,
+            #location="Kuala Lumpur",
+            results_wanted=100,
+            hours_old=168,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+            country_indeed="Malaysia",  # only needed for indeed / glassdoor
+            # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
+            # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+            )
+        
+        print (len(df))
 
-job_description = ""
-job_description = st.text_area("Paste the job description here", height=300)
+        # Format the job_link column to be clickable
+        df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
+        
+        ## Save jobs to the database
+        #for _, row in df.iterrows():
+        #    c.execute("INSERT INTO job_searches (search_term, job_title, job_description, job_link) VALUES (?, ?, ?, ?)",
+        #              (search_term, row['job_title'], row['job_description'], row['job_link']))
+        #conn.commit()
+        
+        # Display the job results
+        st.write("Showing the top 10 results:")
+        #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
+        st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(10).to_html(escape=False, index=False), unsafe_allow_html=True)
+        #st.dataframe(df)
 
-
-#automatic summary of top requirements of job
-
-
-# Language selection
-#languages = ['English', 'French', 'Spanish', 'German', 'Chinese', 'Japanese', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Turkish']
-#selected_language = st.selectbox("Select the language for the cover letter", languages)
-
-
-#button to generate changes needed
-if st.button("CV Changes Needed"):
-    if not cv_text or not job_description:
-        st.warning('Please upload a CV and provide a job description.')
+        # CSV download button
+        #st.download_button(
+        #    label="Download data as CSV",
+        #    data=df[['job_title', 'job_description', 'job_link']].head(10).to_csv(index=False),
+        #    file_name='job_results.csv',
+        #    mime='text/csv',
+        #)
     else:
-        # Generate cover letter
-        cover_letter = generate_feedback(cv_text, job_description)
-        st.subheader("Changes Needed to Tailor Your CV")
-        st.write(cover_letter)
+        st.write("Please enter a search term.")
 
-        # Add download button for the cover letter
-        st.download_button(
-            label="Download CV Changes as Text",
-            data=cover_letter,
-            file_name="cv_changes.txt",
-            mime="text/plain"
-        )
-
-
+# Closing the database connection
+#conn.close()
