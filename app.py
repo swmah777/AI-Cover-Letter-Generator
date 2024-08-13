@@ -7,18 +7,17 @@ from utils.key_validation import is_valid_key
 
 import os
 import re
-import os
-import magic
-from PyPDF2 import PdfReader
-import docx2txt
-import pytesseract
-from PIL import Image
+#import magic
+#from PyPDF2 import PdfReader
+#import docx2txt
+#import pytesseractß
+#from PIL import Image
 import json
 from groq import Groq
 # make sure you have .env file saved locally with your API keys
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import pandas as pd
-import sqlite3
+#import sqlite3
 from jobspy import scrape_jobs
 
 # Setting up the SQLite database
