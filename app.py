@@ -19,6 +19,7 @@ from groq import Groq
 import pandas as pd
 #import sqlite3
 from jobspy import scrape_jobs
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Setting up the SQLite database
 #conn = sqlite3.connect('app_data.db')
@@ -37,6 +38,7 @@ st.markdown(
     <style>
     .main {
         max-width: 90%;
+        padding: 20px;
     }
     </style>
     """,
@@ -87,8 +89,24 @@ if st.button("Search"):
         # Display the job results
         st.write("Showing the top 10 results:")
         #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
-        st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(10).to_html(escape=False, index=False), unsafe_allow_html=True)
+        #st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(10).to_html(escape=False, index=False), unsafe_allow_html=True)
         #st.dataframe(df)
+
+        # Configure st_aggrid
+        gb = GridOptionsBuilder.from_dataframe(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10))
+        gb.configure_pagination(paginationPageSize=10)
+        gb.configure_default_column(wrapText=True, autoHeight=True)
+        gb.configure_column("description", wrapText=False)  # No wrapping to enable expansion
+        gb.configure_grid_options(domLayout='autoHeight')
+        gb.configure_grid_options(onRowClicked="expand")
+
+        gridOptions = gb.build()
+
+        # Display the grid
+        AgGrid(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10), 
+                gridOptions=gridOptions, 
+                allow_unsafe_jscode=True,
+                height=300)
 
         # CSV download button
         #st.download_button(
