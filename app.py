@@ -48,8 +48,8 @@ st.title("Job Search App")
 st.write("Welcome to the Job Search App. Input a search term to find jobs that are less than 72 hours old.")
 
 # Sidebar for comments
-st.sidebar.header("Comments")
-user_comment = st.sidebar.text_area("Enter your comments here:")
+#st.sidebar.header("Comments")
+#user_comment = st.sidebar.text_area("Enter your comments here:")
 
 #if user_comment:
 #    c.execute("INSERT INTO comments (comment) VALUES (?)", (user_comment,))
