@@ -7,7 +7,7 @@ from utils.key_validation import is_valid_key
 
 import os
 import re
-#import magic
+import magic
 #from PyPDF2 import PdfReader
 #import docx2txt
 #import pytesseractß
