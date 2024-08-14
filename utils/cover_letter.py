@@ -4,6 +4,30 @@ import os
 from prompt_templates import templates
 
 #14/8 function to summarise listings
+def rank_match (job_title, job_description,input_text):
+
+    prompt_template = templates["rank_listing"]
+
+    prompt = prompt_template.format(job_title=job_title, job_description=job_description, search_term=input_text)
+
+    client = Groq(
+    # This is the default and can be omitted
+    api_key=os.environ.get("GROQ_API_KEY"),
+    )
+
+    chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    model="llama3-8b-8192",
+    )
+    return chat_completion.choices[0].message.content
+
+
+#14/8 function to summarise listings
 def summarise_listing (job_description):
 
     prompt_template = templates["summarise_listing"]

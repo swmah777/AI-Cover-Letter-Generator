@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.text_extraction import extract_text_from_cv, extract_job_description_from_link, parse_file_contents
-from utils.cover_letter import generate_cover_letter, generate_feedback, create_search_terms, summarise_listing
+from utils.cover_letter import generate_cover_letter, generate_feedback, create_search_terms, summarise_listing, rank_match
 from utils.key_validation import is_valid_key
 #from utils.add_github_link import add_github_link
 
@@ -112,6 +112,15 @@ def extract_and_llm (description):
     summary = summarise_listing(cleaned_description)
     return summary
 
+def score_match (title, description, searchterm):
+    cleaned_title = title.replace('\n', ' ').strip()
+    cleaned_description = description.replace('\n', ' ').strip()
+
+    score = rank_match(cleaned_title, cleaned_description, searchterm)
+    cleaned_score = score.strip()
+
+    return int(cleaned_score)
+
 
 # Input field for job search
 search_term = st.text_input("What are you looking for?")
@@ -134,7 +143,7 @@ if st.button("Search"):
                 search_term=searchword,
                 location="Malaysia",
                 results_wanted=5,
-                hours_old=24,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+                hours_old=48,  # (only Linkedin/Indeed is hour specific, others round up to days old)
                 country_indeed="Malaysia",
                 country_glassdoor="Malaysia",  # only needed for indeed / glassdoor
                 # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
@@ -160,10 +169,12 @@ if st.button("Search"):
 
         #truncate to what needs to be shown, summarise then display
         #df = df.sort_values(by='date_posted', ascending=False)
-        display_df = df.head(20)
+        display_df = df.head(15)
+        display_df['score'] = display_df.apply(lambda row: score_match(row['title'], row['description'], search_term), axis=1)
+        display_df = display_df.sort_values(by='score', ascending=False)
         display_df['summary'] = display_df['description'].apply(extract_and_llm)
         display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
-        st.markdown(display_df[['title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.markdown(display_df[['score','title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
         #st.dataframe(df)
 
         # Configure st_aggrid

@@ -151,7 +151,9 @@ templates = {
     """,
 
     "create_search": """
-    You are an expert jobseeker acting on behalf of the candidate, helping translate their intent to job titles to search for. The candidate inputs down what they are looking for, and you create 3 job titles that are most relevant to their needs. 
+    You are an expert jobseeker acting on behalf of the Malaysian candidate, helping translate their intent to job titles to search for. 
+    The candidate inputs down what they are looking for, and you create 3 job titles that are most relevant to their needs. 
+    The candidate might input in English, Malay, Chinese or a mixture, so be prepared to translate non-English words to the three most relevant English job titles. 
 
     Make sure each job title is simple and not more than 2 words long. Do not join different concepts into one keyword, e.g. do not create 'Social Media Product Manager', instead separate into 'Product Manager' and 'Social Media Manager'. 
 
@@ -198,6 +200,32 @@ templates = {
     ---
     Job Description:
     {job_description}
+    ---
+
+  
+    """,
+
+    "rank_listing": """
+    You are an expert recruiter, assessing how well a job matches the intent of the jobseeker candidate.
+
+    You are given a listing title, job description, and the search term of the candidate. 
+    Output one number between 0 and 10 grading how good the match is, with 0 being a very poor match, 5 a moderate match, and 10 a very good match.
+
+    Output your comments as one number. DO NOT ADD ANY OTHER TEXT/FORMATTING OF THE NUMBER:
+
+    An example output is below:
+    
+    6
+
+    ---
+    Job Title:
+    {job_title}
+
+    Job Description:
+    {job_description}
+
+    Candidate Search Term:
+    {search_term}
     ---
 
   
