@@ -148,6 +148,25 @@ templates = {
     Parsed Listing:
     {job_description}
     ---
-    """
+    """,
+
+    "create_search": """
+    You are an expert jobseeker acting on behalf of the candidate. The candidate inputs down what jobs they are looking for, and you create 3 search terms that are most relevant to their needs. 
+
+    Output your comments in a structured list of strings, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
+
+    ['search_term_1','search_term_2','search_term_3']
+
+    An example output is below:
+
+    ['software engineer','software developer','machine learning engineer']
+
+    ---
+    User Input:
+    {user_input}
+    ---
+
+  
+    """    
     # Add more templates as needed
 }

@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.text_extraction import extract_text_from_cv, extract_job_description_from_link, parse_file_contents
-from utils.cover_letter import generate_cover_letter, generate_feedback
+from utils.cover_letter import generate_cover_letter, generate_feedback, create_search_terms
 from utils.key_validation import is_valid_key
 #from utils.add_github_link import add_github_link
 
@@ -47,7 +47,7 @@ st.markdown(
 
 # Introduction
 st.title("Job Search App")
-st.write("Welcome to the Job Search App. Input a search term to find jobs that are less than 72 hours old.")
+st.write("Welcome to the Job Search App. Write down what ")
 
 # Sidebar for comments
 #st.sidebar.header("Comments")
@@ -63,22 +63,31 @@ search_term = st.text_input("Enter your desired search term:")
 
 if st.button("Search"):
     if search_term:
-        # Call the find_jobs function
-        df = scrape_jobs(
-            site_name=["indeed"],
-            search_term=search_term,
-            #location="Kuala Lumpur",
-            results_wanted=100,
-            hours_old=168,  # (only Linkedin/Indeed is hour specific, others round up to days old)
-            country_indeed="Malaysia",  # only needed for indeed / glassdoor
-            # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
-            # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
-            )
-        
-        print (len(df))
+        #first use LLM to translate user input into 
+        search_term_list = create_search_terms(search_term)
+
+        st.write(search_term_list)
+
+        df = pd.DataFrame()
+
+        for searchword in search_term_list:
+
+            # Call the find_jobs function
+            df1 = scrape_jobs(
+                site_name=["indeed"],
+                search_term=searchword,
+                #location="Kuala Lumpur",
+                results_wanted=5,
+                hours_old=168,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+                country_indeed="Malaysia",  # only needed for indeed / glassdoor
+                # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
+                # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+                )
+            
+            df = pd.concat([df, df1], ignore_index=True)
 
         # Format the job_link column to be clickable
-        df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
+        #df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
         
         ## Save jobs to the database
         #for _, row in df.iterrows():
@@ -89,24 +98,24 @@ if st.button("Search"):
         # Display the job results
         st.write("Showing the top 10 results:")
         #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
-        #st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(10).to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(15).to_html(escape=False, index=False), unsafe_allow_html=True)
         #st.dataframe(df)
 
         # Configure st_aggrid
-        gb = GridOptionsBuilder.from_dataframe(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10))
-        gb.configure_pagination(paginationPageSize=10)
-        gb.configure_default_column(wrapText=True, autoHeight=True)
-        gb.configure_column("description", wrapText=False)  # No wrapping to enable expansion
-        gb.configure_grid_options(domLayout='autoHeight')
-        gb.configure_grid_options(onRowClicked="expand")
+        #gb = GridOptionsBuilder.from_dataframe(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10))
+        #gb.configure_pagination(paginationPageSize=10)
+        #gb.configure_default_column(wrapText=True, autoHeight=False)
+        #gb.configure_column("description", wrapText=False)  # No wrapping to enable expansion
+        #gb.configure_grid_options(domLayout='autoHeight')
+        #gb.configure_grid_options(onRowClicked="expand")
 
-        gridOptions = gb.build()
+        #gridOptions = gb.build()
 
         # Display the grid
-        AgGrid(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10), 
-                gridOptions=gridOptions, 
-                allow_unsafe_jscode=True,
-                height=300)
+        #AgGrid(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10), 
+        #        gridOptions=gridOptions, 
+        #        allow_unsafe_jscode=True,
+        #        height=300)
 
         # CSV download button
         #st.download_button(
