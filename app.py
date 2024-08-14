@@ -50,8 +50,8 @@ st.markdown(
 )
 
 # Introduction
-st.title("Job Search App")
-st.write("Welcome to the Job Search App. Write down what you type of job you want to search for. ")
+st.title("Malaysia JobFinder - Let AI find your perfect job")
+st.write("Write down what you are looking for. This can be 'Analyst' to 'I want a job in social media'")
 
 #clear cache and create new df
 st.cache_data.clear()
@@ -92,12 +92,13 @@ if st.button("Search"):
 
             # Call the find_jobs function
             df1 = scrape_jobs(
-                site_name=["indeed"],
+                site_name=["indeed","glassdoor"],
                 search_term=searchword,
-                #location="Kuala Lumpur",
-                results_wanted=10,
+                location="Malaysia",
+                results_wanted=5,
                 hours_old=24,  # (only Linkedin/Indeed is hour specific, others round up to days old)
-                country_indeed="Malaysia",  # only needed for indeed / glassdoor
+                country_indeed="Malaysia",
+                country_glassdoor="Malaysia",  # only needed for indeed / glassdoor
                 # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
                 # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
                 )
@@ -120,7 +121,8 @@ if st.button("Search"):
         #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
 
         #truncate to what needs to be shown, summarise then display
-        display_df = df.head(10)
+        #df = df.sort_values(by='date_posted', ascending=False)
+        display_df = df.head(20)
         display_df['summary'] = display_df['description'].apply(extract_and_llm)
         display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
         st.markdown(display_df[['title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)

@@ -151,15 +151,15 @@ templates = {
     """,
 
     "create_search": """
-    You are an expert jobseeker acting on behalf of the candidate. The candidate inputs down what jobs they are looking for, and you create 3 search terms that are most relevant to their needs. 
+    You are an expert jobseeker acting on behalf of the candidate, helping translate their intent to job titles to search for. The candidate inputs down what they are looking for, and you create 3 job titles that are most relevant to their needs. 
 
-    Make sure each search term is simple and not more than 2 words long. Do not join different concept into one keyword, e.g. do not create 'Social Media Product Manager', instead separate into 'Product Manager' and 'Social Media'. 
+    Make sure each job title is simple and not more than 2 words long. Do not join different concepts into one keyword, e.g. do not create 'Social Media Product Manager', instead separate into 'Product Manager' and 'Social Media Manager'. 
 
     Do not add words such as 'job' or 'career' to the search terms. 
 
     Output your comments as a list of three strings separated by commas, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
 
-    ['search_term_1','search_term_2','search_term_3']
+    ['job_title_1','job_title_2','job_title_3']
 
     An example output is below:
 
