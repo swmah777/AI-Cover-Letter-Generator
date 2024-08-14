@@ -37,21 +37,59 @@ load_dotenv()
 
 # Custom CSS to increase the width of the main content area
 st.set_page_config(layout="wide")
+# Custom CSS to include Tailwind
 st.markdown(
     """
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
+    body {
+        background-color: white;
+    }
+    .header-container {
+        background-color: #34d399; /* Light emerald background */
+        padding: 10px;
+        border-radius: 0px;
+        margin-bottom: 10px;
+    }
+    .header-container h1 {
+        color: #333333; /* Same darker text for contrast */
+        font-size: 2.0rem; /* Larger font size */
+        margin: 0;
+    }
+    .header-container h2, .header-container p {
+        font-size: 1.0rem; /* Smaller font size */
+        margin: 0;
+    }
     .main {
         max-width: 90%;
-        padding: 20px;
+        padding: 0px;
+    }
+    /* Table header styling */
+    table th {
+        background-color: #34d399; /* Same green background */
+        color: #333; /* Darker text for contrast */
+        padding: 10px;
+        border-bottom: 2px solid #ddd; /* Subtle border at the bottom */
+    }
+    table td {
+        padding: 10px;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Introduction
-st.title("Malaysia JobFinder - Let AI find your perfect job")
-st.write("Write down what you are looking for. This can be 'Analyst' to 'I want a job in social media'")
+# Combined header block
+st.markdown(
+    """
+    <div class="header-container">
+        <h1>Malaysia JobFinder - Let AI find your perfect job</h1>
+        <h2>We summarise relevant jobs from Indeed and Glassdoor posted in the past day.</h2>
+        <p>Write down what you are looking for. This can be short ('Analyst') or detailed ('I want a job in social media').</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 
 #clear cache and create new df
 st.cache_data.clear()
