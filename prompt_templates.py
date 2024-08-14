@@ -153,7 +153,11 @@ templates = {
     "create_search": """
     You are an expert jobseeker acting on behalf of the candidate. The candidate inputs down what jobs they are looking for, and you create 3 search terms that are most relevant to their needs. 
 
-    Output your comments in a structured list of strings, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
+    Make sure each search term is simple and not more than 2 words long. Do not join different concept into one keyword, e.g. do not create 'Social Media Product Manager', instead separate into 'Product Manager' and 'Social Media'. 
+
+    Do not add words such as 'job' or 'career' to the search terms. 
+
+    Output your comments as a list of three strings separated by commas, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
 
     ['search_term_1','search_term_2','search_term_3']
 
@@ -167,6 +171,37 @@ templates = {
     ---
 
   
-    """    
+    """,
+    
+    "summarise_listing": """
+    You are an expert recruiter, summarising details of a job description. You are provided with a job description. 
+
+    State the following: top 3 most important technical requirements of the job, salary range, and whether it is part time, full time or contract job.  
+
+    Each point should be in one concise sentence.
+
+    Output your comments as a string, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
+
+    Requirement 1: State the most important technical requirement.
+    Requirement 2: State second most important technical requirement.
+    Requirement 3: State third most important technical requirement.
+    Salary Range: State what is in description. Write N/A if not specified.
+    Job Type: Full time, Part time, Contract etc. State what is in description. Write N/A if not specified.
+
+    An example output is below:
+    Requirement 1: Strong job control language skills and pc operating systems skills.
+    Requirement 2: Proficiency in scheduling software packages as used by IQVIA and problem management tools.
+    Requirement 3: Analytical/problem solving skills.
+    Salary Range: RM12,000.00 - RM20,000.00 per month.
+    Job Type: Full time
+
+    ---
+    Job Description:
+    {job_description}
+    ---
+
+  
+    """
+       
     # Add more templates as needed
 }

@@ -1,12 +1,13 @@
 import streamlit as st
 from utils.text_extraction import extract_text_from_cv, extract_job_description_from_link, parse_file_contents
-from utils.cover_letter import generate_cover_letter, generate_feedback, create_search_terms
+from utils.cover_letter import generate_cover_letter, generate_feedback, create_search_terms, summarise_listing
 from utils.key_validation import is_valid_key
 #from utils.add_github_link import add_github_link
 
 
 import os
 import re
+import ast
 import magic
 from PyPDF2 import PdfReader
 import docx2txt
@@ -15,11 +16,13 @@ from PIL import Image
 import json
 from groq import Groq
 # make sure you have .env file saved locally with your API keys
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import pandas as pd
 #import sqlite3
 from jobspy import scrape_jobs
 from st_aggrid import AgGrid, GridOptionsBuilder
+
+load_dotenv()
 
 # Setting up the SQLite database
 #conn = sqlite3.connect('app_data.db')
@@ -33,6 +36,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 #conn.commit()
 
 # Custom CSS to increase the width of the main content area
+st.set_page_config(layout="wide")
 st.markdown(
     """
     <style>
@@ -47,7 +51,11 @@ st.markdown(
 
 # Introduction
 st.title("Job Search App")
-st.write("Welcome to the Job Search App. Write down what ")
+st.write("Welcome to the Job Search App. Write down what you type of job you want to search for. ")
+
+#clear cache and create new df
+st.cache_data.clear()
+df = pd.DataFrame()
 
 # Sidebar for comments
 #st.sidebar.header("Comments")
@@ -58,6 +66,15 @@ st.write("Welcome to the Job Search App. Write down what ")
 #    conn.commit()
 #    st.sidebar.write("Comment submitted!")
 
+##define needed functions
+def extract_and_llm (description):
+    # Step 1: Extract the text (this is just an example; modify as needed)
+    cleaned_description = description.replace('\n', ' ').strip()
+    # Step 2: input to summarise function
+    summary = summarise_listing(cleaned_description)
+    return summary
+
+
 # Input field for job search
 search_term = st.text_input("Enter your desired search term:")
 
@@ -66,9 +83,10 @@ if st.button("Search"):
         #first use LLM to translate user input into 
         search_term_list = create_search_terms(search_term)
 
-        st.write(search_term_list)
+        # Convert the string to a list
+        search_term_list = ast.literal_eval(search_term_list)
 
-        df = pd.DataFrame()
+        st.write(search_term_list)
 
         for searchword in search_term_list:
 
@@ -77,17 +95,19 @@ if st.button("Search"):
                 site_name=["indeed"],
                 search_term=searchword,
                 #location="Kuala Lumpur",
-                results_wanted=5,
-                hours_old=168,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+                results_wanted=10,
+                hours_old=24,  # (only Linkedin/Indeed is hour specific, others round up to days old)
                 country_indeed="Malaysia",  # only needed for indeed / glassdoor
                 # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
                 # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
                 )
             
+            
             df = pd.concat([df, df1], ignore_index=True)
+            df = df.drop_duplicates(subset=['title'],keep='first')
 
         # Format the job_link column to be clickable
-        #df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
+        df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
         
         ## Save jobs to the database
         #for _, row in df.iterrows():
@@ -98,7 +118,12 @@ if st.button("Search"):
         # Display the job results
         st.write("Showing the top 10 results:")
         #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
-        st.markdown(df[['title','description', 'job_url','site', 'location','date_posted']].head(15).to_html(escape=False, index=False), unsafe_allow_html=True)
+
+        #truncate to what needs to be shown, summarise then display
+        display_df = df.head(10)
+        display_df['summary'] = display_df['description'].apply(extract_and_llm)
+        display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
+        st.markdown(display_df[['title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
         #st.dataframe(df)
 
         # Configure st_aggrid

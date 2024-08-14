@@ -3,11 +3,34 @@ from groq import Groq
 import os
 from prompt_templates import templates
 
+#14/8 function to summarise listings
+def summarise_listing (job_description):
 
-#13/8 app to translate user input into search terms:
+    prompt_template = templates["summarise_listing"]
+
+    prompt = prompt_template.format(job_description=job_description)
+
+    client = Groq(
+    # This is the default and can be omitted
+    api_key=os.environ.get("GROQ_API_KEY"),
+    )
+
+    chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    model="llama3-8b-8192",
+    )
+    return chat_completion.choices[0].message.content
+
+
+#13/8 function to translate user input into search terms:
 def create_search_terms(input_text):
 
-    prompt_template = templates[input_text]
+    prompt_template = templates["create_search"]
 
     prompt = prompt_template.format(user_input=input_text)
 
