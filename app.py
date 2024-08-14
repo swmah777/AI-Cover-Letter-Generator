@@ -114,7 +114,7 @@ def extract_and_llm (description):
 
 
 # Input field for job search
-search_term = st.text_input("Enter your desired search term:")
+search_term = st.text_input("What are you looking for?")
 
 if st.button("Search"):
     if search_term:
