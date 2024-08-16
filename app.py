@@ -92,8 +92,22 @@ st.markdown(
 )
 
 #clear cache and create new df
-st.cache_data.clear()
-df = pd.DataFrame()
+#st.cache_data.clear()
+
+# Initialize session state for usage count
+if 'feedback_df' not in st.session_state:
+    # Create an empty DataFrame with a column for feedback
+    st.session_state.feedback_df = pd.DataFrame(columns=["Feedback"])
+
+if 'search_count' not in st.session_state:
+    st.session_state.search_count = 0
+
+if 'feedback_given' not in st.session_state:
+    st.session_state.feedback_given = False  # To track whether feedback has been given
+
+if 'show_feedback_form' not in st.session_state:
+    st.session_state.show_feedback_form = False  # To control when feedback form should be shown
+
 
 # Sidebar for comments
 #st.sidebar.header("Comments")
@@ -121,87 +135,226 @@ def score_match (title, description, searchterm):
 
     return int(cleaned_score)
 
+# Function to handle the job search flow
+def run_job_search():
+    search_term = st.text_input("What jobs are you looking for? Be as detailed or as brief as you like.")
 
-# Input field for job search
-search_term = st.text_input("What are you looking for?")
+    if st.button("Search"):
+        if search_term:
+            st.session_state.search_count += 1
+            #st.write(f"Search count: {st.session_state.search_count}")
 
-if st.button("Search"):
-    if search_term:
-        #first use LLM to translate user input into 
-        search_term_list = create_search_terms(search_term)
-
-        # Convert the string to a list
-        search_term_list = ast.literal_eval(search_term_list)
-
-        st.write(search_term_list)
-
-        for searchword in search_term_list:
-
-            # Call the find_jobs function
-            df1 = scrape_jobs(
-                site_name=["indeed","glassdoor"],
-                search_term=searchword,
-                location="Malaysia",
-                results_wanted=5,
-                hours_old=48,  # (only Linkedin/Indeed is hour specific, others round up to days old)
-                country_indeed="Malaysia",
-                country_glassdoor="Malaysia",  # only needed for indeed / glassdoor
-                # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
-                # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
-                )
+            # Check if search count is a multiple of 3 to show the feedback form
+            if st.session_state.search_count % 3 == 0:
+                st.session_state.show_feedback_form = True
+                return  # Exit the function so the feedback form can be shown
             
+            else:
+                #create empty dataframe each time
+                df = pd.DataFrame()
+
+                #first use LLM to translate user input into 
+                search_term_list = create_search_terms(search_term)
+
+                # Convert the string to a list
+                search_term_list = ast.literal_eval(search_term_list)
+
+                st.write(search_term_list)
+
+                with st.spinner("Pulling all relevant jobs posted in past 2 days, please wait..."):
+
+                    for searchword in search_term_list:
+
+                        # Call the find_jobs function
+                        df1 = scrape_jobs(
+                            site_name=["indeed","glassdoor"],
+                            search_term=searchword,
+                            location="Malaysia",
+                            results_wanted=5,
+                            hours_old=48,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+                            country_indeed="Malaysia",
+                            country_glassdoor="Malaysia",  # only needed for indeed / glassdoor
+                            # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
+                            # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+                            )
+                        
+                        
+                        df = pd.concat([df, df1], ignore_index=True)
+                        df = df.drop_duplicates(subset=['title'],keep='first')
+
+                    # Format the job_link column to be clickable
+                    df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
+                    
+                    ## Save jobs to the database
+                    #for _, row in df.iterrows():
+                    #    c.execute("INSERT INTO job_searches (search_term, job_title, job_description, job_link) VALUES (?, ?, ?, ?)",
+                    #              (search_term, row['job_title'], row['job_description'], row['job_link']))
+                    #conn.commit()
+
+                    # Display the job results
+                    st.write (st.session_state.search_count)
+                    #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
+
+                    #truncate to what needs to be shown, summarise then display
+                    #df = df.sort_values(by='date_posted', ascending=False)
+                    display_df = df.head(15)
+                    display_df['score'] = display_df.apply(lambda row: score_match(row['title'], row['description'], search_term), axis=1)
+                    display_df = display_df.sort_values(by='score', ascending=False)
+                    display_df['summary'] = display_df['description'].apply(extract_and_llm)
+                    display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
+                    st.markdown(display_df[['score','title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
+                    #st.dataframe(df)
+
+# Function to handle the feedback flow
+def run_feedback_form():
+    st.write("Please let us know how to improve!")
+
+    # Display the feedback form
+    with st.form("feedback_form"):
+        feedback = st.text_area("e.g. more job boards, different filters, auto apply...")
+        submitted = st.form_submit_button("Submit")
+
+        if submitted:
+            #st.write("Thank you for your feedback!")
+
+            # Append the new feedback to the DataFrame
+            if feedback:  # Ensure feedback isn't empty
+                new_feedback = pd.DataFrame({"Feedback": [feedback]})
+                st.session_state.feedback_df = pd.concat([st.session_state.feedback_df, new_feedback], ignore_index=True)
+
+                # Mark that feedback has been given
+                st.session_state.feedback_given = True
+                st.session_state.show_feedback_form = False  # Hide the form after submission
+
+            # Display the updated DataFrame after feedback submission
+            st.write("Thank you for your feedback! Press submit above to search for more jobs.")
+            #st.dataframe(st.session_state.feedback_df)
+
+# Main Logic
+#st.write(st.session_state.search_count)
+#st.write(st.session_state.feedback_given)
+#st.write(st.session_state.show_feedback_form)
+# Display the growing feedback DataFrame
+st.write("Feedback received so far:")
+st.dataframe(st.session_state.feedback_df)
+
+if not st.session_state.show_feedback_form:
+    # Run job search logic when the feedback form is not showing
+    run_job_search()
+else:
+    # Run feedback form logic when it's time to collect feedback
+    run_feedback_form()
+
+# Reset the feedback state and search count after feedback is handled
+if st.session_state.feedback_given:
+    st.session_state.search_count = 0
+    st.session_state.feedback_given = False
+
+
+# #code before 16/8
+# # Input field for job search
+# search_term = st.text_input("What are you looking for?")
+
+# if st.button("Search"):
+#     if search_term:
+#         st.write(st.session_state.search_count)
+
+#         # Display the updated DataFrame
+#         st.write("Feedback received so far:")
+#         st.dataframe(st.session_state.feedback_df)
+
+#         # Increment the search count each time a user searches
+#         st.session_state.search_count += 1
+        
+#         # Check if session state is not multiples of 3 to show the output table
+#         if st.session_state.search_count % 3 > 0:
+
+#             #create empty dataframe each time
+#             df = pd.DataFrame()
+
+#             #first use LLM to translate user input into 
+#             search_term_list = create_search_terms(search_term)
+
+#             # Convert the string to a list
+#             search_term_list = ast.literal_eval(search_term_list)
+
+#             st.write(search_term_list)
+
+#             for searchword in search_term_list:
+
+#                 # Call the find_jobs function
+#                 df1 = scrape_jobs(
+#                     site_name=["indeed","glassdoor"],
+#                     search_term=searchword,
+#                     location="Malaysia",
+#                     results_wanted=5,
+#                     hours_old=48,  # (only Linkedin/Indeed is hour specific, others round up to days old)
+#                     country_indeed="Malaysia",
+#                     country_glassdoor="Malaysia",  # only needed for indeed / glassdoor
+#                     # linkedin_fetch_description=True # get full description , direct job url , company industry and job level (seniority level) for linkedin (slower)
+#                     # proxies=["208.195.175.46:65095", "208.195.175.45:65095", "localhost"],
+#                     )
+                
+                
+#                 df = pd.concat([df, df1], ignore_index=True)
+#                 df = df.drop_duplicates(subset=['title'],keep='first')
+
+#             # Format the job_link column to be clickable
+#             df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
             
-            df = pd.concat([df, df1], ignore_index=True)
-            df = df.drop_duplicates(subset=['title'],keep='first')
+#             ## Save jobs to the database
+#             #for _, row in df.iterrows():
+#             #    c.execute("INSERT INTO job_searches (search_term, job_title, job_description, job_link) VALUES (?, ?, ?, ?)",
+#             #              (search_term, row['job_title'], row['job_description'], row['job_link']))
+#             #conn.commit()
 
-        # Format the job_link column to be clickable
-        df['job_url'] = df['job_url'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>')
+#             # Display the job results
+#             st.write (st.session_state.search_count)
+#             st.write("Showing the top 10 results:")
+#             #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
+
+#             #truncate to what needs to be shown, summarise then display
+#             #df = df.sort_values(by='date_posted', ascending=False)
+#             display_df = df.head(10)
+#             display_df['score'] = display_df.apply(lambda row: score_match(row['title'], row['description'], search_term), axis=1)
+#             display_df = display_df.sort_values(by='score', ascending=False)
+#             display_df['summary'] = display_df['description'].apply(extract_and_llm)
+#             display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
+#             st.markdown(display_df[['score','title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
+#             #st.dataframe(df)
         
-        ## Save jobs to the database
-        #for _, row in df.iterrows():
-        #    c.execute("INSERT INTO job_searches (search_term, job_title, job_description, job_link) VALUES (?, ?, ?, ?)",
-        #              (search_term, row['job_title'], row['job_description'], row['job_link']))
-        #conn.commit()
-        
-        # Display the job results
-        st.write("Showing the top 10 results:")
-        #st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
+#         # If the search count is multiples of 3, show the feedback form and block the output table
+#         else:
 
-        #truncate to what needs to be shown, summarise then display
-        #df = df.sort_values(by='date_posted', ascending=False)
-        display_df = df.head(15)
-        display_df['score'] = display_df.apply(lambda row: score_match(row['title'], row['description'], search_term), axis=1)
-        display_df = display_df.sort_values(by='score', ascending=False)
-        display_df['summary'] = display_df['description'].apply(extract_and_llm)
-        display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
-        st.markdown(display_df[['score','title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
-        #st.dataframe(df)
+#             st.write("Thank you for using our test app. Please let us know what you think and how to improve!")
 
-        # Configure st_aggrid
-        #gb = GridOptionsBuilder.from_dataframe(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10))
-        #gb.configure_pagination(paginationPageSize=10)
-        #gb.configure_default_column(wrapText=True, autoHeight=False)
-        #gb.configure_column("description", wrapText=False)  # No wrapping to enable expansion
-        #gb.configure_grid_options(domLayout='autoHeight')
-        #gb.configure_grid_options(onRowClicked="expand")
+#             with st.form("feedback_form"):
+#                 feedback = st.text_area("Please leave your feedback here:")
+#                 submitted = st.form_submit_button("Submit")
 
-        #gridOptions = gb.build()
+#                 if submitted:
+#                     st.write("Thank you for your feedback!")
+#                     # Append the new feedback to the DataFrame
+#                     new_feedback = {"Feedback": feedback}
+#                     st.session_state.feedback_df = st.session_state.feedback_df.append(new_feedback, ignore_index=True)
 
-        # Display the grid
-        #AgGrid(df[['title', 'description', 'job_url', 'site', 'location', 'date_posted']].head(10), 
-        #        gridOptions=gridOptions, 
-        #        allow_unsafe_jscode=True,
-        #        height=300)
+#                     # Mark that feedback has been given and reset search count to 1
+#                     #st.session_state.feedback_given = True
+#                     #st.session_state.search_count = 1
+#                     st.session_state.feedback_given = True
+#                     # Optionally save the feedback to a file or database
+#                     # Example: save_feedback_to_file(feedback)
 
-        # CSV download button
-        #st.download_button(
-        #    label="Download data as CSV",
-        #    data=df[['job_title', 'job_description', 'job_link']].head(10).to_csv(index=False),
-        #    file_name='job_results.csv',
-        #    mime='text/csv',
-        #)
-    else:
-        st.write("Please enter a search term.")
 
-# Closing the database connection
-#conn.close()
+#         # CSV download button
+#         #st.download_button(
+#         #    label="Download data as CSV",
+#         #    data=df[['job_title', 'job_description', 'job_link']].head(10).to_csv(index=False),
+#         #    file_name='job_results.csv',
+#         #    mime='text/csv',
+#         #)
+#     #else:
+#         #st.write("Please enter a search term.")
+
+# # Closing the database connection
+# #conn.close()
