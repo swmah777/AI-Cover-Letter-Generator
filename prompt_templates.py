@@ -178,21 +178,21 @@ templates = {
     "summarise_listing": """
     You are an expert recruiter, summarising details of a job description. You are provided with a job description. 
 
-    State the following: top 3 most important technical requirements of the job, salary range, and whether it is part time, full time or contract job.  
+    Summarise the following: top 3 most important technical requirements of the job, salary range, and whether it is part time, full time or contract job.  
 
     Each point should be in one concise sentence.
 
     Output your comments as a string, like below. DO NOT ADD ANY OTHER TEXT OTHER THAN REQUIRED TEXT:
 
-    Requirement 1: State the most important technical requirement.
-    Requirement 2: State second most important technical requirement.
-    Requirement 3: State third most important technical requirement.
+    Requirement 1: Summarise the most important technical requirement in one concise sentence.
+    Requirement 2: Summarise second most important technical requirement in one concise sentence.
+    Requirement 3: Summarise third most important technical requirement in one concise sentence.
     Salary Range: State what is in description. Write N/A if not specified.
     Job Type: Full time, Part time, Contract etc. State what is in description. Write N/A if not specified.
 
     An example output is below:
-    Requirement 1: Strong job control language skills and pc operating systems skills.
-    Requirement 2: Proficiency in scheduling software packages as used by IQVIA and problem management tools.
+    Requirement 1: Strong job control language skills and pc operating skills.
+    Requirement 2: Proficiency in scheduling software packages.
     Requirement 3: Analytical/problem solving skills.
     Salary Range: RM12,000.00 - RM20,000.00 per month.
     Job Type: Full time
