@@ -197,7 +197,7 @@ def run_job_search():
 
                     #truncate to what needs to be shown, summarise then display
                     #df = df.sort_values(by='date_posted', ascending=False)
-                    display_df = df.head(15)
+                    display_df = df.head(10)
                     display_df['score'] = display_df.apply(lambda row: score_match(row['title'], row['description'], search_term), axis=1)
                     display_df = display_df.sort_values(by='score', ascending=False)
                     display_df['summary'] = display_df['description'].apply(extract_and_llm)
