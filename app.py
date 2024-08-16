@@ -202,7 +202,7 @@ def run_job_search():
                     display_df = display_df.sort_values(by='score', ascending=False)
                     display_df['summary'] = display_df['description'].apply(extract_and_llm)
                     display_df['summary'] = display_df['summary'].str.replace('\n', '<br>')
-                    st.markdown(display_df[['score','title','company','summary', 'job_url','site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
+                    st.markdown(display_df[['title','company','job_url','summary', 'site', 'location','date_posted']].to_html(escape=False, index=False), unsafe_allow_html=True)
                     #st.dataframe(df)
 
 # Function to handle the feedback flow
