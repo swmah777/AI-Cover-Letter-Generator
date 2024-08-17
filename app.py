@@ -241,6 +241,7 @@ def run_job_search():
                     )
                     # st.dataframe(df)
 
+
 # Function to handle the feedback flow
 def run_feedback_form():
     st.write("Please let us know how to improve!")
@@ -270,12 +271,7 @@ def run_feedback_form():
                 st.session_state.show_feedback_form = (
                     False  # Hide the form after submission
                 )
-
-            # Display the updated DataFrame after feedback submission
-            st.write(
-                "Thank you for your feedback! Press submit above to search for more jobs."
-            )
-            # st.dataframe(st.session_state.feedback_df)
+                st.rerun()  # force rerun script so we can hide the form immediately
 
 
 # Main Logic
