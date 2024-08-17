@@ -28,6 +28,13 @@ cd ai-cover-letter-generator
 
 ## Setup
 
+1. Setup virtual environment so your packages are local to this repository, and it doesn't interfere with your system wide packages. 
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+2. Install Python packages
 ```bash
 pip install -r requirements.txt
 ```
