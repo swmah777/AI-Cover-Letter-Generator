@@ -3,7 +3,6 @@ import ast
 from datetime import datetime
 
 import pandas as pd
-import pymongo
 import streamlit as st
 
 # make sure you have .env file saved locally with your API keys
@@ -12,6 +11,7 @@ from dotenv import load_dotenv
 # import sqlite3
 from jobspy import scrape_jobs
 
+from database.mongo import Database
 from utils.cover_letter import create_search_terms, rank_match, summarise_listing
 
 load_dotenv()
@@ -115,17 +115,7 @@ if "show_feedback_form" not in st.session_state:
 ##define needed functions
 
 
-# Setting up MongoDB connection
-@st.cache_resource
-def init_connection():
-    return pymongo.MongoClient(st.secrets["db_url"])
-
-
-client = init_connection()
-
-
-def write_feedback(data):
-    return client["jom"]["feedbacks"].insert_one(data).inserted_id
+database = Database()
 
 
 def extract_and_llm(description):
@@ -262,7 +252,7 @@ def run_feedback_form():
                 st.session_state.feedback_df = pd.concat(
                     [st.session_state.feedback_df, new_feedback], ignore_index=True
                 )
-                write_feedback(
+                database.write_feedback(
                     {"feedback": feedback, "created_at": datetime.now()}
                 )  # not using the data frame as it's not suitable for the database structure
 
