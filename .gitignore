@@ -1,3 +1,8 @@
+#ignore local testing scripts
+*.ipynb
+scraper.py
+scraper2.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
