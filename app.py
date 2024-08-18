@@ -269,8 +269,8 @@ def run_feedback_form():
 # st.write(st.session_state.feedback_given)
 # st.write(st.session_state.show_feedback_form)
 # Display the growing feedback DataFrame
-st.write("Feedback received so far:")
-st.dataframe(st.session_state.feedback_df)
+#st.write("Feedback received so far:")
+#st.dataframe(st.session_state.feedback_df)
 
 if not st.session_state.show_feedback_form:
     # Run job search logic when the feedback form is not showing
