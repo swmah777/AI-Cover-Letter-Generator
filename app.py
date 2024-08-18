@@ -43,6 +43,13 @@ st.markdown(
         border-radius: 0px;
         margin-bottom: 10px;
     }
+    @media (prefers-color-scheme: dark) {
+      .header-container {
+        background-color: #34d399; /* Light emerald background */
+        padding: 10px;
+        border-radius: 0px;
+        margin-bottom: 10px;
+    }
     .header-container h1 {
         color: #333333; /* Same darker text for contrast */
         font-size: 2.0rem; /* Larger font size */
@@ -161,6 +168,10 @@ def run_job_search():
 
                 # Convert the string to a list
                 search_term_list = ast.literal_eval(search_term_list)
+
+                database.write_search_log(
+                    query=search_term, generated_keywords=search_term_list
+                )
 
                 st.write(search_term_list)
 
