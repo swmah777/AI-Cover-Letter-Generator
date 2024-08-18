@@ -83,8 +83,8 @@ st.markdown(
     """
     <div class="header-container">
         <h1>Malaysia JobFinder - Let AI find your perfect job</h1>
-        <h2>We summarise relevant jobs from Indeed and Glassdoor posted in the past day.</h2>
-        <p>Write down what you are looking for. This can be short ('Analyst') or detailed ('I want a job in social media').</p>
+        <h2>We summarise relevant jobs from Malaysia job boards posted in the past 2 days.</h2>
+        <p>Write down what you are looking for. Be as detailed as you like.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -146,7 +146,7 @@ def score_match(title, description, searchterm):
 # Function to handle the job search flow
 def run_job_search():
     search_term = st.text_input(
-        "What jobs are you looking for? Be as detailed or as brief as you like."
+        "What jobs are you looking for? Add type of work, industry, skills important to you."
     )
 
     if st.button("Search"):
@@ -176,7 +176,7 @@ def run_job_search():
                 st.write(search_term_list)
 
                 with st.spinner(
-                    "Pulling all relevant jobs posted in past 2 days, please wait..."
+                    "Pulling jobs posted in past 2 days, please wait..."
                 ):
                     for searchword in search_term_list:
                         # Call the find_jobs function
@@ -207,12 +207,12 @@ def run_job_search():
                     # conn.commit()
 
                     # Display the job results
-                    st.write(st.session_state.search_count)
+                    #st.write(st.session_state.search_count)
                     # st.dataframe(df[['title','description', 'job_url','site', 'location','date_posted']].head(10))
 
                     # truncate to what needs to be shown, summarise then display
                     # df = df.sort_values(by='date_posted', ascending=False)
-                    display_df = df.head(10)
+                    display_df = df.head(8)
                     display_df["score"] = display_df.apply(
                         lambda row: score_match(
                             row["title"], row["description"], search_term
